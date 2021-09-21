@@ -1,5 +1,6 @@
 from typing import Optional
 
+import uvicorn
 from fastapi import Depends, FastAPI
 
 app = FastAPI()
@@ -17,3 +18,7 @@ async def read_items(commons: dict = Depends(common_parameters)):
 @app.get("/users/")
 async def read_users(commons: dict = Depends(common_parameters)):
     return commons
+
+if __name__ == '__main__':
+    uvicorn.run('main:app', host='0.0.0.0', reload=True)
+
