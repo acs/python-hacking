@@ -5,34 +5,33 @@ import time
 
 
 async def spin(msg: str):
-    write, flush = sys.stdout.write, sys.stdout.flush
     for char in itertools.cycle('|/-\\'):
-        status = char + ' ' + msg
-        write(status)
-        flush()
-        time.sleep(.1)
-        write('\x08' * len(status))
-    write(' ' * len(status + '\x08' * len(status)))
+        status = f'\r{char} {msg}'
+        print(status, flush=True, end='')
+        try:
+            await asyncio.sleep(.1)
+        except asyncio.CancelledError:
+            break
+    blanks = ' ' * len(status)
+    print(f'\r{blanks}\r', end='')
 
 
 async def slow_io_function():
     # pretend waiting for a long time for I/O
-    time.sleep(3)  # GIL is released in time function
+    await asyncio.sleep(3)  # GIL is released in time function
     return 42
 
 
-def supervisor():
+async def supervisor() -> int:
     spinner = asyncio.create_task(spin('thinking!'))
     print(f'Spinner object: {spinner}')
-    result = yield from slow_io_function()
+    result = await slow_io_function()
     spinner.cancel()
     return result
 
 
-def main():
-    loop = asyncio.get_event_loop()
-    result = loop.run_until_complete(supervisor())
-    loop.close()
+def main() -> None:
+    result = asyncio.run(supervisor())
     print(f'Answer: {result}')
 
 
